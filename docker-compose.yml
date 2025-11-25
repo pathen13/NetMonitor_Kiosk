@@ -2,6 +2,9 @@ version: "3.8"
 
 services:
   uptime-monitor:
+    build:
+      context: ./
+      dockerfile: Dockerfile
     image: uptime-monitor:latest
     container_name: uptime-monitor
     restart: unless-stopped
