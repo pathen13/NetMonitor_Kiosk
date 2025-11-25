@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  uptime-monitor:
+    image: uptime-monitor:latest
+    container_name: uptime-monitor
+    restart: unless-stopped
+    # für Swarm: "deploy" benutzen, siehe unten
+    environment:
+      - NETWORK_CIDR=192.168.178.0/24
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./known_hosts.txt:/app/known_hosts.txt:ro
+    # unter Linux evtl. angenehmer:
+    # network_mode: "host"
