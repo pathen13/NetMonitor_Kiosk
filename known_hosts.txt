@@ -1,4 +1,5 @@
 # ip,hostname,required,VIP
+##### INFRASTRUCTURE ######
 192.168.178.1,Fritz-Box,true,false
 192.168.178.2,Archer-Router,false,false
 192.168.178.3,Proxmox 1,true,false
@@ -6,27 +7,28 @@
 192.168.178.151,DOCKER Essential,true,true
 192.168.178.154,DOCKER Webservices,true,false
 
-
+##### SPECIAL GUEST #####
 192.168.178.136,LOKI,false,true
 
-
+##### IOT #####
 192.168.178.230,3D-Drucker,false,false
 192.168.178.81,Roborock S7,false,false
 
-
+##### KIOSK DEVICES #####
 192.168.178.104,Kiosk-7Zoll,false,false
 192.168.178.106,Kiosk-Flur,true,false
 
+##### DEV-SERVICE #####
 192.168.178.181,Test-DC,false,false
 
+##### ENDPOINT #####
 192.168.178.21,PC Patrick,false,false
 192.168.178.22,Laptop Morri,false,false
 192.168.178.214,Steamdeck,false,false
-192.168.178.222,iPad Morri,false,false
 
+
+##### MOBILE #####
+192.168.178.222,iPad Morri,false,false
 192.168.178.204,iPhone Morri,false,false
 192.168.178.232,iPhone Helios,false,false
 192.168.178.238,S23U Patrick,false,false
-
-
-192.168.178.244,TEST-Device,true,false
