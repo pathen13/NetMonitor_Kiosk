@@ -15,8 +15,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY uptime_monitor.py ./
 COPY known_hosts.txt ./known_hosts.txt
 
-# Port, auf dem Flask läuft
 EXPOSE 8000
 
-# Standard-Command
 CMD ["python", "uptime_monitor.py"]
