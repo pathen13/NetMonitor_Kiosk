@@ -2,18 +2,11 @@ version: "3.8"
 
 services:
   uptime-monitor:
-    build:
-      context: ./
-      dockerfile: Dockerfile
+    build: .              # Code wird direkt aus dem Git-Checkout gebaut
     image: uptime-monitor:latest
-    container_name: uptime-monitor
-    restart: unless-stopped
-    # für Swarm: "deploy" benutzen, siehe unten
     environment:
       - NETWORK_CIDR=192.168.178.0/24
+      # Optional: - KNOWN_HOSTS_FILE=/app/known_hosts.txt
     ports:
       - "8000:8000"
-    volumes:
-      - ./known_hosts.txt:/app/known_hosts.txt:ro
-    # unter Linux evtl. angenehmer:
-    # network_mode: "host"
+    restart: unless-stopped
