@@ -8,5 +8,5 @@ services:
       - NETWORK_CIDR=192.168.178.0/24
       # Optional: - KNOWN_HOSTS_FILE=/app/known_hosts.txt
     ports:
-      - "8000:8000"
+      - "9000:9000"
     restart: unless-stopped
