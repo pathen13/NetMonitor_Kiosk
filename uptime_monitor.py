@@ -19,9 +19,12 @@ NEW_DEVICE_WINDOW_SECONDS = NEW_DEVICE_WINDOW_MINUTES * 60
 
 # devices: ip -> dict(...)
 #   ip, hostname, required, vip, from_known_hosts,
-#   first_seen, last_seen, online, created_at
+#   first_seen, last_seen, online, created_at,
+#   seen_before_baseline (optional)
 devices = {}
 devices_lock = threading.Lock()
+# Wird nach dem ersten vollständigen Scan auf True gesetzt
+baseline_done = False
 
 app = Flask(__name__)
 
@@ -108,6 +111,7 @@ with devices_lock:
             "last_seen": None,
             "online": False,
             "created_at": now_init,
+            # wird später bei der Baseline gesetzt
         }
 
 
@@ -133,6 +137,7 @@ def scan_host(ip: str):
                     "last_seen": now,
                     "online": True,
                     "created_at": now,
+                    # seen_before_baseline wird hier bewusst NICHT gesetzt
                 }
             else:
                 if entry.get("first_seen") is None:
@@ -149,13 +154,24 @@ def scan_host(ip: str):
 
 
 def scan_loop():
+    global baseline_done
+    first_iteration = True
+
     while True:
         with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
             executor.map(scan_host, hosts)
 
-        # Aufräumen: unbekannte, lange offline Geräte
         now = time.time()
         with devices_lock:
+            # Beim allerersten kompletten Scan:
+            # alle zu diesem Zeitpunkt bekannten Geräte als "Baseline" markieren.
+            if first_iteration and not baseline_done:
+                for d in devices.values():
+                    d["seen_before_baseline"] = True
+                baseline_done = True
+                first_iteration = False
+
+            # Aufräumen: unbekannte, lange offline Geräte
             to_delete = []
             for ip, d in list(devices.items()):
                 if d.get("from_known_hosts") or d.get("required"):
@@ -171,7 +187,7 @@ def scan_loop():
         time.sleep(SCAN_INTERVAL_SECONDS)
 
 
-# -------- Web-UI --------
+# -------- Web-UI (800x240, 6 Kästen/Zeile) --------
 
 @app.route("/")
 def index():
@@ -290,8 +306,8 @@ def index():
   <div class="header">
     <h1>Uptime Monitor</h1>
     <div class="info">
-      Netz: <span id="net"></span> · Geräte: <span id="count">0</span><br>
-      Last Update: <span id="ts">-</span>
+      Netz: <span id="net"></span><br>
+      Geräte: <span id="count">0</span> · <span id="ts">-</span>
     </div>
   </div>
   <div class="container" id="bubbles"></div>
@@ -329,10 +345,9 @@ def index():
         // Farb-/Blink-Logik:
         if (dev.online) {
           if (dev.vip) {
-            // VIP online: dunkelblau
             classes.push("vip-online");
             if (dev.is_new) {
-              classes.push("blink"); // neuer VIP -> blinkt
+              classes.push("blink");  // neuer VIP -> blinkt
             }
           } else if (dev.is_new) {
             classes.push("new-online", "blink");
@@ -343,7 +358,7 @@ def index():
           if (dev.required) {
             classes.push("offline-required", "blink");
           }
-          // offline & nicht required oder VIP offline werden gar nicht geliefert
+          // offline & nicht required / VIP offline werden gar nicht geliefert
         }
 
         bubble.className = classes.join(" ");
@@ -390,7 +405,7 @@ def index():
     return Response(html, mimetype="text/html")
 
 
-# -------- API (Sortierung + Filter) --------
+# -------- API (Sortierung + Filter + "neu" nach Baseline) --------
 
 @app.route("/api/devices")
 def api_devices():
@@ -420,9 +435,15 @@ def api_devices():
 
             age = now - first_seen if first_seen is not None else None
             last_seen_ago = now - last_seen if last_seen is not None else None
+            seen_before_baseline = d.get("seen_before_baseline", False)
+
+            # "neu" nur für Geräte, die NACH der Baseline hinzugekommen sind
             is_new = bool(
                 online and
                 first_seen is not None and
+                baseline_done and
+                not seen_before_baseline and
+                age is not None and
                 age <= NEW_DEVICE_WINDOW_SECONDS
             )
 
@@ -470,4 +491,4 @@ def start_scanner():
 
 if __name__ == "__main__":
     start_scanner()
-    app.run(host="0.0.0.0", port=9000)
+    app.run(host="0.0.0.0", port=8000)
