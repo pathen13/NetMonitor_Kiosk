@@ -274,7 +274,7 @@ def index():
       background-color: #2196f3;      /* neu & online */
     }
     .bubble.vip-online {
-      background-color: #1565c0;      /* VIP online */
+      background-color: #1d471c;      /* VIP online */
     }
 
     .hostname {
